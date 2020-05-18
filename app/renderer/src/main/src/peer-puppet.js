@@ -26,11 +26,25 @@ async function getScreenStream() {
 	});
 }
 const pc = new window.RTCPeerConnection();
+pc.ondatachannel = (e) => {
+	console.log('datachannel', e);
+	e.channel.onmessage = (e) => {
+		let { type, data } = JSON.parse(e.data);
+		if (type === 'mouse') {
+			data.screen = {
+				width: window.screen.width,
+				height: window.screen.height
+			};
+		}
+		ipcRenderer.send('robot', type, data);
+	};
+};
 
 pc.onicecandidate = (e) => {
 	console.log('candidate', JSON.stringify(e.candidate));
 	if (e.candidate) {
-		ipcRenderer.send('forward', 'puppet-candidate', e.candidate);
+		// ipcRenderer.send('forward', 'puppet-candidate', e.candidate);
+		ipcRenderer.send('forward', 'control-candidate', JSON.stringify(e.candidate));
 	}
 };
 
@@ -41,7 +55,7 @@ async function addIceCandidate(candidate) {
 	}
 	if (pc.remoteDescription && pc.remoteDescription.type) {
 		for (let i = 0; i < candidates.length; i++) {
-			await pc.addIceCandidate(new RTCIceCandidate(candidates[i]));
+			await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(candidates[i])));
 		}
 		candidates = [];
 	}
@@ -49,6 +63,7 @@ async function addIceCandidate(candidate) {
 window.addIceCandidate = addIceCandidate;
 ipcRenderer.on('offer', async (e, offer) => {
 	let answer = await createAnswer(offer);
+	console.log('trying sending...');
 	ipcRenderer.send('forward', 'answer', { type: answer.type, sdp: answer.sdp });
 });
 

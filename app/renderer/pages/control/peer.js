@@ -17,11 +17,26 @@ const { ipcRenderer } = require('electron');
 // });
 
 const pc = new window.RTCPeerConnection({});
+const dc = pc.createDataChannel('robotchannel', { reliable: false });
+dc.onopen = function() {
+	peer.on('robot', (type, data) => {
+		dc.send(JSON.stringify({ type, data }));
+	});
+};
+
+dc.onmessage = function(event) {
+	console.log('message', event);
+};
+
+dc.onerror = (e) => {
+	console.log('error', e);
+};
 
 pc.onicecandidate = (e) => {
 	console.log('candidate', JSON.stringify(e.candidate));
 	if (e.candidate) {
-		ipcRenderer.send('forward', 'control-candidate', e.candidate);
+		// ipcRenderer.send('forward', 'control-candidate', e.candidate);
+		ipcRenderer.send('forward', 'control-candidate', JSON.stringify(e.candidate));
 	}
 };
 
@@ -32,7 +47,7 @@ async function addIceCandidate(candidate) {
 	}
 	if (pc.remoteDescription && pc.remoteDescription.type) {
 		for (let i = 0; i < candidates.length; i++) {
-			await pc.addIceCandidate(new RTCIceCandidate(candidates[i]));
+			await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(candidates[i])));
 		}
 		candidates = [];
 	}
@@ -59,7 +74,7 @@ createOffer().then((offer) => {
 
 async function setRemote(answer) {
 	await pc.setRemoteDescription(answer);
-	console.log('create-answer', pc);
+	// console.log('create-answer', pc);
 }
 window.setRemote = setRemote;
 ipcRenderer.on('answer', (e, answer) => {
