@@ -1,0 +1,30 @@
+{
+	"name": "control",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app/main/index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "concurrently \"npm run start:render\" \"wait-on http://localhost:3000 && npm run start:main\" ",
+		"start:main": "electron .",
+		"start:render": "cd app/renderer/src/main && npm start"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"concurrently": "^5.2.0",
+		"cross-env": "^7.0.2",
+		"customize-cra": "^0.9.1",
+		"electron": "^8.3.0",
+		"electron-rebuild": "^1.11.0",
+		"node-gyp": "^6.1.0",
+		"react-app-rewired": "^2.1.6",
+		"wait-on": "^5.0.0"
+	},
+	"dependencies": {
+		"electron-is-dev": "^1.2.0",
+		"robotjs": "^0.6.0",
+		"vkey": "^1.0.1",
+		"ws": "^7.3.0"
+	}
+}
